@@ -1,0 +1,44 @@
+from django.contrib.auth import LoginRequiredMixin
+from rest_framework.views import APIView
+from .models import CustomUser
+from rest_framework import status
+from rest_framework import Response
+class Customer(APIView):
+    def post(self,request):
+        data = request.data
+        user = request.user
+        CustomUser.objects.create(
+            user_id = data.get("user_id"),
+            username = data.get("username"),
+            password = data.get("password"),
+            account_no = data.get("account_no")
+        )
+        return Response({
+            "status":"Success"
+        }.status = status.HTTP_201_OK)
+
+    def get(self,request):
+        user = request.user
+        user_id = request.query_params.get("user_id")
+        try:
+            data = CustomUser.objects.filter(user_id=user_id).values("username","password","user_id","account_no")
+        except Exception as e:
+            print(e)
+        return Response({
+            "data":data
+        },status=status.HTTP_200_OK)        
+    def patch(self,request):
+        data = request.data
+        user_id = data.get("user_id")
+        try:
+            user = CustomUser.objects.filter(user_id=user_id)
+            allowed_parameters = ["username","account_no","password"]
+            for field in allowed_parameters:
+                if field in data:
+                    setattr(user,field,data[field])
+            user.save()
+        except Exception as e:
+            print(e)
+        return Response({
+            "status":"success"
+        },status=status.HTTP_200_OK)                
